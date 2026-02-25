@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación DNI Argentino</title>
+
+    <!-- ZXing CDN for ID validation -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
+ 
+    <style>
+        :root {
+            --accent: #000084;
+            --accent2: #ee1d33;
+            --primary-light: #1a1a9e;
+            --primary-dark: #00005c;
+            --success: #2e7d32;
+            --success-bg: #e8f5e9;
+            --error-bg: #ffebee;
+            --surface: #ffffff;
+            --instructions-bg: #fafafa;
+            --text: #1a1a2e;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 16px;
+            --radius-sm: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'gotham-medium', sans-serif;
+            color: var(--text);
+        }
+
+        .open-modal-btn {
+            margin-top: 15px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            background: #000084;
+            color: white;
+            cursor: pointer;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 132, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: var(--surface);
+            width: 95%;
+            max-width: 600px;
+            max-height: calc(100vh - 40px);
+            border-radius: var(--radius);
+            padding: 0;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            scrollbar-gutter: stable;
+            padding: 24px;
+        }
+        
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #000084;
+            margin: 0;
+            text-align: center;
+        }
+
+        .title-icon {
+            font-size: 24px;
+            color: rgb(52, 134, 86);
+        }
+        
+        .modal-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }     
+
+        .section-title {
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 600;
+            margin: 25px 0 15px 0;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .section-title i {
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .instructions {
+            background: var(--instructions-bg);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid var(--border);
+        }
+        .instructions ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 6px;
+        }
+
+        .text-highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* DNI examples - collapsible */
+        .examples-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .examples-toggle:hover {
+            background: rgba(0, 0, 132, 0.06);
+            border-color: var(--accent);
+        }
+        .examples-toggle i {
+            transition: transform 0.3s ease;
+        }
+        .examples-collapsible.expanded .examples-toggle i {
+            transform: rotate(180deg);
+        }
+        .examples-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .examples-collapsible.expanded .examples-content {
+            max-height: 500px;
+        }
+        .examples {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .example-card {
+            flex: 1;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .example-card img {
+            width: 100%;
+            border-radius: 6px;
+            height: 150px;
+        }
+
+        /* upload DNI image */
+        .upload-area-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .upload-area {
+            flex: 1;
+            min-width: 140px;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(13, 71, 161, 0.04);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .upload-area:hover .upload-icon {
+            color: var(--accent);
+            transform: scale(1.05);
+        }
+        .upload-icon {
+            font-size: 32px;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+        .upload-area input {
+            display: none;
+        }
+
+        /* preview DNI image */
+        .preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80px;
+            margin-bottom: 20px;
+        }
+        .preview:empty {
+            display: none;
+        }
+        .preview img {
+            max-width: 50%;
+            max-height: 200px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            object-fit: contain;
+        }
+
+        /* feedback */
+        .feedback {
+            margin-top: 12px;
+            font-weight: 500;
+            text-align: center;
+            font-size: 14px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .feedback:empty {
+            display: none;
+        }
+        .success {
+            color: var(--success);
+            background: var(--success-bg);
+        }
+
+        .error {
+            color: var(--accent2);
+            background: var(--error-bg);
+        }
+
+        /* submit button */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        button.continue-btn {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 12px;
+            background: var(--border);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        button.continue-btn.enabled {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary-light) 100%);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 14px -3px rgba(0, 0, 132, 0.4);
+        }
+        button.continue-btn.enabled:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -4px rgba(0, 0, 132, 0.4);
+        }
+
+        /* x button */
+        button.close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* media queries */
+        @media (max-width: 480px) {
+            .upload-area-container {
+                flex-direction: column;
+            }
+
+            .upload-area {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button onclick="openModal()" class="open-modal-btn">Validación</button>
+
+    <div id="dniModal" class="modal-overlay" style="display:none;">
+        <div class="modal">
+
+            <button class="close-btn" onclick="closeModal()">✖</button>
+            <h2><i class="mdi mdi-shield-check title-icon"></i> Validación de identidad</h2>
+
+            <p>Para habilitar el pago con puntos, necesitamos confirmar que la cuenta te pertenece.</p>
+            <p class="modal-subtitle">La validación se realiza en el momento y no almacenamos ningún dato de tu DNI.</p>
+
+            <h3 class="section-title"><i class="mdi mdi-camera"></i> Subí una foto de tu DNI que contenga el código de barras</h3>
+
+            <div class="instructions">
+                <p>Necesitamos una imagen de la cara de tu DNI donde se vea el código de barras:</p>
+                <ul>
+                    <li><span class="text-highlight">DNI nuevo (tarjeta):</span> el código está en el frente</li>
+                    <li><span class="text-highlight">DNI anterior (libreta):</span> el código está en el dorso</li>
+                </ul>
+                <p>💡 Asegurate que la imagen sea clara y que se vea el código de barras completo, sin reflejos.</p>
+            </div>
+
+            <div class="examples-collapsible" id="examplesCollapsible">
+                <button type="button" class="examples-toggle" onclick="toggleExamples()" aria-expanded="false" aria-controls="examplesContent">
+                    Ver ejemplos según el formato de DNI
+                    <i class="mdi mdi-chevron-down"></i>
+                </button>
+                <div class="examples-content" id="examplesContent">
+                    <div class="examples">
+                        <div class="example-card">
+                            <img src="./images/dni-frente2.png">
+                            <div>DNI nuevo (frente)</div>
+                        </div>
+                        <div class="example-card">
+                            <img src="./images/dni-dorso2.png">
+                            <div>DNI anterior (dorso)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-area-container">
+                <label class="upload-area">
+                    <span class="upload-icon"><i class="mdi mdi-folder-upload-outline"></i></span>
+                    Subí una foto
+                    <input type="file" id="dniInputFile" accept="image/*">
+                </label>
+                <label class="upload-area">
+                    <span class="upload-icon"><i class="mdi mdi-camera-outline"></i></span>
+                    Tomá una foto
+                    <input type="file" id="dniInputCamera" accept="image/*" capture="environment">
+                </label>
+            </div>
+
+            <div class="preview" id="previewContainer"></div>
+            <div id="feedback" class="feedback"></div>
+
+            <div class="button-container">
+                <button id="continueBtn" class="continue-btn" disabled>Validar</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('dniModal').style.display = 'flex';
+        }
+
+        function toggleExamples() {
+            const collapsible = document.getElementById('examplesCollapsible');
+            const toggle = collapsible.querySelector('.examples-toggle');
+            const isExpanded = collapsible.classList.toggle('expanded');
+            toggle.setAttribute('aria-expanded', isExpanded);
+        }
+
+        function closeModal() {
+            document.getElementById('dniModal').style.display = 'none';
+        }
+
+            const inputFile = document.getElementById('dniInputFile');
+            const inputCamera = document.getElementById('dniInputCamera');
+            const preview = document.getElementById('previewContainer');
+            const feedback = document.getElementById('feedback');
+            const continueBtn = document.getElementById('continueBtn');
+
+        function handleFileSelect(file) {
+                if (!file) return;
+                const blobUrl = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.id = 'dniImage';
+                img.src = blobUrl;
+                preview.innerHTML = '';
+                preview.appendChild(img);
+                img.onload = async function () {
+                    try {
+                        await detectPDF417(img);
+                    } finally {
+                        URL.revokeObjectURL(blobUrl);
+                    }
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(blobUrl);
+                    feedback.textContent = "✖ Error al cargar la imagen.";
+                    feedback.classList.add("error");
+                };
+            }
+
+            inputFile.addEventListener('change', function () { handleFileSelect(this.files[0]); });
+            inputCamera.addEventListener('change', function () { handleFileSelect(this.files[0]); });
+
+            async function detectPDF417(imgElement) {
+                feedback.className = "feedback";
+                feedback.textContent = "🔍 Detectando código de barras...";
+
+                const PDF417Reader = ZXing.BrowserPDF417Reader || ZXing.BrowserMultiFormatReader;
+                const codeReader = new PDF417Reader();
+
+                try {
+                    const result = await codeReader.decodeFromImage(imgElement);
+                    const rawText = (result.text !== undefined) ? result.text : result.getText();
+
+                    if (codeReader instanceof ZXing.BrowserMultiFormatReader &&
+                        result.getBarcodeFormat && result.getBarcodeFormat() !== ZXing.BarcodeFormat.PDF_417) {
+                        throw new Error("✖ No se detectó un código PDF417 válido");
+                    }
+
+                    if (!isValidArgentinianDNI(rawText)) {
+                        throw new Error("Formato inválido de DNI");
+                    }
+
+                    feedback.textContent = "✔ DNI detectado correctamente.";
+                    feedback.classList.add("success");
+
+                    continueBtn.disabled = false;
+                    continueBtn.classList.add("enabled");
+
+                } catch (err) {
+                    console.error("Error decodificando PDF417:", err);
+                    feedback.textContent = "✖ No se pudo leer el código de barras. Intentá nuevamente.";
+                    feedback.classList.add("error");
+
+                    continueBtn.disabled = true;
+                    continueBtn.classList.remove("enabled");
+                }
+            }
+
+            function isValidArgentinianDNI(text) {
+                if (!text.includes("@")) return false;
+                const parts = text.split("@");
+
+                if (parts.length < 10) return false;
+
+                const dniRegex = /\b\d{7,8}\b/;
+                if (!dniRegex.test(text)) return false;
+
+                if (text.length < 100) return false;
+
+                return true;
+            }
+        </script>
+
+</body>
+
+</html>
