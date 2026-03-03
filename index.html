@@ -32,11 +32,9 @@
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
             --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         }
-
         * {
             box-sizing: border-box;
         }
-
         body {
             font-family: 'gotham-medium', sans-serif;
             color: var(--text);
@@ -272,7 +270,7 @@
             object-fit: contain;
         }
 
-        /* Small front thumbnail on screen 2 */
+        /* Preview of front image on screen 2 */
         .front-thumb-section {
             display: flex;
             align-items: center;
@@ -298,7 +296,7 @@
             font-size: 18px;
         }
 
-        /* spinner */
+        /* Little spinner */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -315,7 +313,7 @@
             flex-shrink: 0;
         }
 
-        /* feedback */
+        /* Feedback */
         .feedback {
             margin-top: 12px;
             font-weight: 500;
@@ -435,7 +433,7 @@
             cursor: pointer;
         }
 
-        /* success screen */
+        /* Success screen */
         .success-screen {
             display: none;
             flex-direction: column;
@@ -482,7 +480,7 @@
             box-shadow: 0 8px 20px -4px rgba(46, 125, 50, 0.4);
         }
 
-        /* error screen (max attempts) */
+        /* Error screen (surpassed max attempts) */
         .error-screen {
             display: none;
             flex-direction: column;
@@ -530,7 +528,7 @@
             box-shadow: 0 8px 20px -4px rgba(0, 0, 132, 0.4);
         }
 
-        /* media queries */
+        /* Media queries */
         @media (max-width: 480px) {
             .upload-area-options {
                 gap: 10px;
@@ -549,15 +547,17 @@
         <div class="modal" id="modalContent">
             <button class="close-btn" onclick="closeModal()">✖</button>
 
-            <!-- ==================== SCREEN 1: FRONT ==================== -->
+            <!-- SCREEN 1 (FRONT) -->
             <div class="screen active" id="screen1">
                 <h2 class="modal-title"><i class="mdi mdi-camera"></i> Subí una foto del frente de tu DNI</h2>
 
+                <!-- Steps indicator -->
                 <div class="step-indicator">
                     <span class="step-dot active"></span>
                     <span class="step-dot"></span>
                 </div>
 
+                <!-- Instructions -->
                 <div class="instructions">
                     <p>
                         <span class="lock-icon"><i class="mdi mdi-lock-outline"></i></span>
@@ -565,6 +565,7 @@
                     </p>
                 </div>
 
+                <!-- Upload area -->
                 <div class="upload-area" id="frontUploadArea">
                     <input type="file" id="frontInputFile" accept="image/*">
                     <input type="file" id="frontInputCamera" accept="image/*" capture="environment">
@@ -579,31 +580,37 @@
                         </div>
                     </div>
                 </div>
-
+                
+                <!-- Image preview-->
                 <div class="preview" id="frontPreview"></div>
 
+                <!-- Final tips -->
                 <p class="tips-text">💡 Asegurate que haya buena luz y que la imagen sea nítida, sin reflejos.</p>
 
+                <!-- Continue button -->
                 <div class="button-container">
                     <button id="nextBtn" class="next-btn" disabled onclick="goToScreen2()">Siguiente</button>
                 </div>
             </div>
 
-            <!-- ==================== SCREEN 2: BACK ==================== -->
+            <!-- SCREEN 2 (BACK) -->
             <div class="screen" id="screen2">
                 <h2 class="modal-title"><i class="mdi mdi-camera"></i> Ahora subí una foto del dorso</h2>
 
+                <!-- Steps indicator -->
                 <div class="step-indicator">
                     <span class="step-dot"></span>
                     <span class="step-dot active"></span>
                 </div>
 
+                <!-- Front ID image preview -->
                 <div class="front-thumb-section" id="frontThumbSection">
                     <i class="mdi mdi-check-circle"></i>
                     <img id="frontThumbImg" src="" alt="Frente">
                     <span class="thumb-label">Frente cargado</span>
                 </div>
 
+                <!-- Upload area -->
                 <div class="upload-area" id="backUploadArea">
                     <input type="file" id="backInputFile" accept="image/*">
                     <input type="file" id="backInputCamera" accept="image/*" capture="environment">
@@ -619,12 +626,16 @@
                     </div>
                 </div>
 
+                <!-- Image preview -->
                 <div class="preview" id="backPreview"></div>
 
+                <!-- Final tips -->
                 <p class="tips-text">💡 Asegurate que haya buena luz y que la imagen sea nítida, sin reflejos.</p>
 
+                <!-- Feedback -->
                 <div id="backFeedback" class="feedback"></div>
 
+                 <!-- Validate / go back button -->
                 <div class="button-container">
                     <button class="back-btn" onclick="goToScreen1()"><i class="mdi mdi-arrow-left"></i> Volver</button>
                     <button id="continueBtn" class="continue-btn" disabled onclick="validateBothImages()">Validar</button>
@@ -651,6 +662,7 @@
         </div>
     </div>
 
+    <!-- JS logic Scripts -->
     <script>
         var modalContent = document.getElementById('modalContent');
         var successScreen = document.getElementById('successScreen');
@@ -689,7 +701,7 @@
             console.error('Error creando codeReader:', e);
         }
 
-        /* ── Screen navigation ── */
+        /* Screen navigation */
 
         function goToScreen2() {
             if (!frontDataUrl) return;
@@ -724,7 +736,7 @@
             errorScreen.style.display = 'flex';
         }
 
-        /* ── Feedback helpers ── */
+        /* Feedback */
 
         function showFeedback(el, message, type) {
             el.className = 'feedback';
@@ -737,7 +749,7 @@
             el.className = 'feedback';
         }
 
-        /* ── Preview builder ── */
+        /*  Preview */
 
         function buildPreview(dataUrl, previewEl, onRemove) {
             var wrapper = document.createElement('div');
@@ -757,7 +769,7 @@
             previewEl.appendChild(wrapper);
         }
 
-        /* ── Front image handling ── */
+        /* Front image handling */
 
         function handleFrontFile(file) {
             if (!file || validated || blocked) return;
@@ -783,7 +795,7 @@
         frontInput.addEventListener('change', function () { handleFrontFile(this.files[0]); this.value = ''; });
         frontCamera.addEventListener('change', function () { handleFrontFile(this.files[0]); this.value = ''; });
 
-        /* ── Back image handling ── */
+        /* Back image handling */
 
         function handleBackFile(file) {
             if (!file || validated || blocked) return;
@@ -811,7 +823,7 @@
         backInput.addEventListener('change', function () { handleBackFile(this.files[0]); this.value = ''; });
         backCamera.addEventListener('change', function () { handleBackFile(this.files[0]); this.value = ''; });
 
-        /* ── Validation (triggered by Validar button) ── */
+        /* Validation (triggered by Validar button) */
 
         async function validateBothImages() {
             if (!frontDataUrl || !backDataUrl || validated || blocked) return;
@@ -877,3 +889,4 @@
 </body>
 
 </html>
+
