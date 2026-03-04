@@ -21,6 +21,7 @@
             --success: #2e7d32;
             --success-bg: #e8f5e9;
             --error-bg: #ffebee;
+            --back-btn-bg: #ce5c674a;
             --surface: #ffffff;
             --instructions-bg: #fafafa;
             --text: #1a1a2e;
@@ -379,10 +380,10 @@
 
         button.back-btn {
             padding: 14px 24px;
-            border: 2px solid var(--border);
+            border: 2px solid var(--accent2);
             border-radius: 12px;
             background: var(--surface);
-            color: var(--text-muted-dark);
+            color: var(--accent2);
             font-family: inherit;
             font-size: 15px;
             font-weight: 600;
@@ -390,8 +391,9 @@
             transition: all 0.3s ease;
         }
         button.back-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: rgba(158, 9, 9, 0.701);
+            background: var(--back-btn-bg);
+            color: rgba(158, 9, 9, 0.701);
             transform: translateY(-2px);
         }
 
